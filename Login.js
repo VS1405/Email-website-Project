@@ -1,88 +1,140 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 
 import Card from '../UI/Card/Card';
 import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
 
+const emailReducer = (state, action) => {
+  if (action.type === 'User_Input') {
+    return { value: action.val, isValid: action.val.includes('@') }
+  }
+  if (action.type === 'Input_Blur') {
+    return { value: state.value, isValid: state.value.includes('@') }
+  }
+  return { value: '', isValid: false }
+  {/* it return new state as an object*/ }
+}
+const passwordReducer = (state, action) => {
+  if(action.type === 'User_password'){
+    return {value: action.val, isValid: action.val.length > 6}  // entered input takinng
+  }
+  if(action.type === 'Input_Blur'){
+    return {value: state.val, isValid: true}   // checkinng input is valid or not
+  }
+  return { value: '', isValid: false }
+}
 const Login = (props) => {
-  const [enteredEmail, setEnteredEmail] = useState('');
-  const [emailIsValid, setEmailIsValid] = useState();
-  const [enteredPassword, setEnteredPassword] = useState('');
-  const [passwordIsValid, setPasswordIsValid] = useState();
+  // const [enteredEmail, setEnteredEmail] = useState('');
+  // const [emailIsValid, setEmailIsValid] = useState();
+  // const [enteredPassword, setEnteredPassword] = useState('');
+  // const [passwordIsValid, setPasswordIsValid] = useState();
   const [formIsValid, setFormIsValid] = useState(false);
   const [enteredCollegeName, setCollegename] = useState('');
   const [collegeIsValid, collegeNameIsValid] = useState();
 
-  useEffect( () => {
-    setFormIsValid(
-      enteredEmail.includes('@') && enteredPassword.trim().length > 6 && 
-      enteredCollegeName.length !== 0 
-    );
-  }, [enteredEmail, enteredPassword, enteredCollegeName])
+  {/* useReducer => its used to manage complex state */ }
+  const [emailState, dispatchEmail] = useReducer(emailReducer,
+    {
+      value: '',
+      isValid: false
+    });
+
+  const [passwordState, dispatchPassword] = useReducer(passwordReducer,
+    {
+      value: '', isValid: false
+    })
+  //   useEffect(() => {
+  //     const identifier = setTimeout(() => {
+  //       console.log('chaking validaion')
+  //       setFormIsValid(
+  //         enteredEmail.includes('@') && enteredPassword.trim().length > 6 &&
+  //         enteredCollegeName.length !== 0
+  //       );
+  //       console.log('after run set time out')
+  //     }, 500)
+  // {/*The arrow function passed as an argument to useEffect is executed after
+  //  every render. This function can return another function, which will be used as a 
+  //  cleanup function to be executed before the component is removed from the DOM. */}
+  //     return () => {
+  //       console.log('CLEANUP FUNCTION')
+  //       clearTimeout(identifier);
+  //     }
+  //   }, [enteredEmail, enteredPassword, enteredCollegeName])
 
   const emailChangeHandler = (event) => {
-    setEnteredEmail(event.target.value);
+    // setEnteredEmail(event.target.value);
+    dispatchEmail({ type: 'User_Input', val: event.target.value })
+
+    setFormIsValid(
+      event.target.value.includes('@') && passwordState.isValid.trim().length > 6 &&
+      enteredCollegeName.length !== 0
+    );
   };
 
   const passwordChangeHandler = (event) => {
-    setEnteredPassword(event.target.value);
+    // setEnteredPassword(event.target.value);
+    dispatchPassword({ type: 'User_password', val: event.target.value })
+
+    setFormIsValid(
+      emailState.isValid && event.target.value.trim().length > 6 &&
+      enteredCollegeName.length !== 0
+    );
   };
 
   const validateEmailHandler = () => {
-    setEmailIsValid(enteredEmail.includes('@'));
+    // setEmailIsValid(emailState.isValid);  {/*.includes('@')*/}
+    dispatchEmail({ type: 'Input_Blur' })
   };
 
   const validatePasswordHandler = () => {
-    setPasswordIsValid(enteredPassword.trim().length > 6);
+    dispatchPassword({ type: 'Input_Blur' })
   };
 
-  const collgeNameChangeHandler = (event) =>{
+  const collgeNameChangeHandler = (event) => {
     setCollegename(event.target.value)
   }
-  const collgeNameHandler = () =>{
+  const collgeNameHandler = () => {
     collegeNameIsValid(enteredCollegeName.trim().length === 0)
   }
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(enteredEmail, enteredPassword, enteredCollegeName );
+    props.onLogin(emailState.value, passwordState.value, enteredCollegeName);
   };
 
-  
+
   return (
     <Card className={classes.login}>
       <form onSubmit={submitHandler}>
         <div
-          className={`${classes.control} ${
-            emailIsValid === false ? classes.invalid : ''
-          }`}
+          className={`${classes.control} ${emailState.isValid === false ? classes.invalid : ''
+            }`}
         >
           <label htmlFor="email">E-Mail</label>
           <input
             type="email"
             id="email"
-            value={enteredEmail}
+            value={emailState.value}
             onChange={emailChangeHandler}
             onBlur={validateEmailHandler}
           />
         </div>
         <div
-          className={`${classes.control} ${
-            passwordIsValid === false ? classes.invalid : ''
-          }`}
+          className={`${classes.control} ${passwordState.isValid === false ? classes.invalid : ''
+            }`}
         >
           <label htmlFor="password">Password</label>
           <input
             type="password"
             id="password"
-            value={enteredPassword}
+            value={passwordState.value}
             onChange={passwordChangeHandler}
             onBlur={validatePasswordHandler}
           />
         </div>
         <div className={`${classes.control}
-         ${!collegeIsValid === false? classes.invalid : ''}`}
-         >
-        <label htmlFor="college-name">College Name</label>
+         ${!collegeIsValid === false ? classes.invalid : ''}`}
+        >
+          <label htmlFor="college-name">College Name</label>
           <input
             type="text"
             id="college-name"
