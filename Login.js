@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useReducer } from 'react';
+import React, { useState, useEffect, useReducer, useContext} from 'react';
 
 import Card from '../UI/Card/Card';
 import classes from './Login.module.css';
 import Button from '../UI/Button/Button';
+import AuthContext from '../../store/auth-context';
 
 const emailReducer = (state, action) => {
   if (action.type === 'User_Input') {
@@ -12,7 +13,7 @@ const emailReducer = (state, action) => {
     return { value: state.value, isValid: state.value.includes('@') }
   }
   return { value: '', isValid: false }
-  {/* it return new state as an object*/ }
+  //  it return new state as an object
 }
 const passwordReducer = (state, action) => {
   if(action.type === 'User_password'){
@@ -32,6 +33,9 @@ const Login = (props) => {
   const [enteredCollegeName, setCollegename] = useState('');
   const [collegeIsValid, collegeNameIsValid] = useState();
 
+  const authCtx = useContext(AuthContext)
+
+
   {/* useReducer => its used to manage complex state */ }
   const [emailState, dispatchEmail] = useReducer(emailReducer,
     {
@@ -43,6 +47,9 @@ const Login = (props) => {
     {
       value: '', isValid: false
     })
+
+    
+    {/*UseEffect used here */}
   //   useEffect(() => {
   //     const identifier = setTimeout(() => {
   //       console.log('chaking validaion')
@@ -96,13 +103,16 @@ const Login = (props) => {
   const collgeNameHandler = () => {
     collegeNameIsValid(enteredCollegeName.trim().length === 0)
   }
+
   const submitHandler = (event) => {
     event.preventDefault();
-    props.onLogin(emailState.value, passwordState.value, enteredCollegeName);
+    console.log('I am in Login')
+    authCtx.onLogin(emailState.value, passwordState.value, enteredCollegeName);
   };
 
 
   return (
+    <React.Fragment>
     <Card className={classes.login}>
       <form onSubmit={submitHandler}>
         <div
@@ -150,6 +160,7 @@ const Login = (props) => {
         </div>
       </form>
     </Card>
+    </React.Fragment>
   );
 };
 
